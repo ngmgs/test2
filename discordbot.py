@@ -1,11 +1,7 @@
-# botのライブラリをimport
+from discord.ext import commands
+from os import getenv
+import traceback
 import discord
-from mastodon import Mastodon, StreamListener
-
-# threading.Threadをimoprt
-from threading import Thread
-
-token = getenv('DISCORD_BOT_TOKEN')
 
 bot = commands.Bot(command_prefix='/',intents=discord.Intents.all())
 
@@ -20,12 +16,7 @@ async def on_command_error(ctx, error):
 @bot.command()
 async def ping(ctx):
     await ctx.send('pong')
-    
 
-# discord botの起動
-job = Thread(target=discord_client.run, args=(token,))
-job.start()
 
-# mastodon bot の起動
-job = Thread(target=mstdn.stream_user, args=(MstdnStreamListener(),))
-job.start()
+token = getenv('DISCORD_BOT_TOKEN')
+bot.run(token)
