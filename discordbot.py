@@ -5,6 +5,8 @@ from mastodon import Mastodon, StreamListener
 # threading.Threadをimoprt
 from threading import Thread
 
+token = getenv('DISCORD_BOT_TOKEN')
+
 bot = commands.Bot(command_prefix='/',intents=discord.Intents.all())
 
 
@@ -21,7 +23,7 @@ async def ping(ctx):
     
 
 # discord botの起動
-job = Thread(target=discord_client.run, args=(DISCORD_BOT_TOKEN,))
+job = Thread(target=discord_client.run, args=(token,))
 job.start()
 
 # mastodon bot の起動
