@@ -1,24 +1,25 @@
+# インストールした discord.py を読み込む
 import discord
-from discord.ext import commands
-from os import getenv
-import traceback
 
 
-bot = commands.Bot(command_prefix='!',intents=discord.Intents.all())
+# 接続に必要なオブジェクトを生成
+client = discord.Client()
 
-
-@bot.event
+# 起動時に動作する処理
+@client.event
 async def on_ready():
-    print(bot.user.name)
-    print(bot.user.id)
+    # 起動したらターミナルにログイン通知が表示される
+    print('ログインしました')
 
-    
-@bot.command(pass_context=True)
-async def kickem(ctx):
-    server=ctx.message.server
-    for member in tuple(server.members):
-        if len(member.roles)==1:
-            await bot.kick(member)
+# メッセージ受信時に動作する処理
+@client.event
+async def on_message(message):
+    # メッセージ送信者がBotだった場合は無視する
+    if message.author.bot:
+        return
+    # 「/neko」と発言したら「にゃーん」が返る処理
+    if message.content == '/neko':
+        await message.channel.send('にゃーん')
 
 
 token = getenv('DISCORD_BOT_TOKEN')
