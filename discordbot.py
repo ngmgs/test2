@@ -1,19 +1,22 @@
-import discord
 from discord.ext import commands
+from os import getenv
+import traceback
+import discord
 
 bot = commands.Bot(command_prefix='/',intents=discord.Intents.all())
 
+
 @bot.event
-async def on_ready():
-    print(bot.user.name)
-    print(bot.user.id)
-
-@bot.command(pass_context=True)
-async def kickem(ctx):
-    server=ctx.message.server
-    for member in tuple(server.members):
-        if len(member.roles)==1:
-            await bot.kick(member)
+async def on_command_error(ctx, error):
+    orig_error = getattr(error, "original", error)
+    error_msg = ''.join(traceback.TracebackException.from_exception(orig_error).format())
+    await ctx.send(error_msg)
 
 
-bot.run('DISCORD_BOT_TOKEN')
+@bot.command()
+async def ping(ctx):
+    await ctx.send('pong')
+
+
+token = getenv('DISCORD_BOT_TOKEN')
+bot.run(token)
