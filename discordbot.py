@@ -1,9 +1,7 @@
-from discord.ext import commands
-from os import getenv
-import traceback
 import discord
+from discord.ext import commands
 
-bot = commands.Bot(command_prefix='!',intents=discord.Intents.all())
+bot=commands.Bot(command_prefix='!')
 
 
 @bot.event
@@ -11,7 +9,6 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
 
-    
 @bot.command(pass_context=True)
 async def kickem(ctx):
     server=ctx.message.server
@@ -20,5 +17,4 @@ async def kickem(ctx):
             await bot.kick(member)
 
 
-token = getenv('DISCORD_BOT_TOKEN')
-bot.run(token)
+bot.run('DISCORD_BOT_TOKEN')
