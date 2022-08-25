@@ -1,26 +1,29 @@
-# インストールした discord.py を読み込む
+# botのライブラリをimport
 import discord
+from mastodon import Mastodon, StreamListener
+
+# threading.Threadをimoprt
+from threading import Thread
+
+bot = commands.Bot(command_prefix='/',intents=discord.Intents.all())
 
 
-# 接続に必要なオブジェクトを生成
-client = discord.Client()
-
-# 起動時に動作する処理
-@client.event
-async def on_ready():
-    # 起動したらターミナルにログイン通知が表示される
-    print('ログインしました')
-
-# メッセージ受信時に動作する処理
-@client.event
-async def on_message(message):
-    # メッセージ送信者がBotだった場合は無視する
-    if message.author.bot:
-        return
-    # 「/neko」と発言したら「にゃーん」が返る処理
-    if message.content == '/neko':
-        await message.channel.send('にゃーん')
+@bot.event
+async def on_command_error(ctx, error):
+    orig_error = getattr(error, "original", error)
+    error_msg = ''.join(traceback.TracebackException.from_exception(orig_error).format())
+    await ctx.send(error_msg)
 
 
-token = getenv('DISCORD_BOT_TOKEN')
-bot.run(token)
+@bot.command()
+async def ping(ctx):
+    await ctx.send('pong')
+    
+
+# discord botの起動
+job = Thread(target=discord_client.run, args=(DISCORD_BOT_TOKEN,))
+job.start()
+
+# mastodon bot の起動
+job = Thread(target=mstdn.stream_user, args=(MstdnStreamListener(),))
+job.start()
