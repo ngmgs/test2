@@ -1,5 +1,6 @@
 import discord
 import traceback
+import re
 from discord.ext import commands
 from discord.ext import tasks
 from os import getenv
@@ -7,7 +8,7 @@ from datetime import datetime, timezone, timedelta, time
 
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-
+is_text = {}
 
 @bot.command()
 async def test(ctx):
@@ -71,22 +72,51 @@ async def kick(ctx, member: discord.Member, reason):
     await ctx.send(embed=embed)
 
 @bot.event
-async def on_message(message):
-    words = ['https']
-    words2 = ['remove']
-    member = message.author
-    role = discord.utils.get(message.guild.roles, name="kagi")
-    for word in words:
-        if word in message.content:
-            print(member)
-            print(role)
-            await member.add_roles(role, atomic=True)  # httpsを含む文字を発言すると発言したメンバーに役職kagiを付与
+async def on_message(message: discord.Message):
+    await _check_url(message)
 
-    for word in words2:
-        if word in message.content:
-            print(member)
-            print(role)
-            await member.remove_roles(role, atomic=True)  # removeを含む文字を発言すると発言したメンバーの役職kagiを削除
+async def _check_url(message: discord.Message):
+    role = discord.utils.get(message.guild.roles, name="kagi")
+    member = message.author
+    pattern = pattern = re.compile(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+")
+
+
+    if message.author.bot:
+        return
+    # メッセージからURLを抽出
+    url_list = re.findall(pattern, message.content)
+    # もしメッセージにURLが含まれていたら
+    if url_list:
+        print("#" * 50)
+        print("1時間以内に同じURLを送信したら削除する")
+        # もし辞書にURLが登録されていたら(含まれていなかったらNoneが返る)
+        if is_text.get(url_list[0], None) is not None:
+            # 送信されていた時間を取り出す
+            _sent_date = is_text[url_list[0]]
+            print("辞書に登録されている発言時間は" + str(_sent_date))
+            # もし差分が3600秒以上(1h)なら
+            if (datetime.now() - _sent_date).seconds >= 3600:
+                # 辞書のURLが持つ発言時間を更新して終了
+                print("辞書のURL(" + url_list[0] + ")が持つ発言時間を更新")
+                is_text[url_list[0]] = datetime.now()
+            else:
+                # 1h以内に投稿されていた場合削除
+                print(url_list[0])
+                print("そのURL(" + url_list[0] + ")が入ったメッセージが1時間以内に投稿されています。削除します。")
+                alert_msg = await message.channel.send("そのURLが入ったメッセージが1時間以内に投稿されています。削除します。")
+                await message.delete(delay=1)
+                await alert_msg.delete(delay=3)
+                return
+        else:
+            # 辞書にURLが登録されていなかったのでURLと発言時間を登録する
+            print("辞書にURLと発言時間を登録")
+            is_text[url_list[0]] = datetime.now()
+            print(is_text)
+    else:
+        print("メッセージにURLはない")
+        
+    # 発言したメンバーに役職kagiを付与
+    await member.add_roles(role, atomic=True)
 
     await bot.process_commands(message)
 
